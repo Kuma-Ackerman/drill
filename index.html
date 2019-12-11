@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .left-container {
+            float: left;
+            position: relative;
+            width: 600px;
+            padding: 40px;
+        }
+        .form-group {
+            height: 42px;
+            line-height: 42px;
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            width: 158px;
+            display: inline-block;
+            text-align: right;
+            padding-right: 20px;
+        }
+        .form-group input {
+            border: 1px solid #ddd;
+            color: #34495e;
+            font-family: Lato,sans-serif;
+            font-size: 14px;
+            padding: 8px 5px 7px;
+            width: 248px;
+            height: 22px;
+            border-radius: 3px;
+            outline: 0;
+        }
+        .right-container {
+            float: right;
+            width: 100%;
+            height: 600px;
+            margin-left: -680px;
+        }
+        .canvas-box {
+            margin-left: 680px;
+            padding: 40px;
+        }
+    </style>
+    <title>钻头模拟图生成工具</title>
+</head>
+<body>
+    <div class="main">
+        <div class="left-container">
+            <div class="form-group">
+                <label>比例</label>
+                <input id="ratio" type="text" value="1:6:3">
+            </div>
+            <div class="form-group">
+                <label>顶角角度</label>
+                <input id="angle" type="text" value="60">
+            </div>
+            <div class="form-group">
+                <label>底角角度</label>
+                <input id="downAngle" type="text" value="120">
+            </div>
+            <div class="form-group">
+                <label></label>
+                <button id="createImage">生成图片</button>
+            </div>
+        </div>
+        <div class="right-container">
+            <div class="canvas-box"><canvas id="myCanvas" width="1200" height="800"></canvas></div>
+        </div>
+    </div>
+    <script>
+        var oCreateImageBtn = document.querySelector('#createImage');
+        var oAngleIpt = document.querySelector('#angle');
+        var oDownAngleIpt = document.querySelector('#downAngle');
+        var oCanvas = document.querySelector('#myCanvas');
+
+        var nFirstHeight = 100;
+        var aPointA = [600, 20];
+
+        _fMain();
+        oCreateImageBtn.addEventListener('click', _fMain);
+
+        function _fMain() {
+            const aRatio = _fGetRatio();
+
+            const nRad = (+oAngleIpt.value / 2) * Math.PI / 180;
+            const nLine = Math.tan(nRad) * nFirstHeight;
+
+            const aPointB = [aPointA[0] - nLine, aPointA[1] + nFirstHeight];
+            const aPointC = [aPointA[0] + nLine, aPointA[1] + nFirstHeight];
+
+            const nSecondHeight = _fGetSecondHeight();
+            const nSecondLine = Math.tan(nRad) * nSecondHeight;
+
+            const aPointD = [aPointA[0] - nSecondLine, aPointA[1] + nSecondHeight];
+            const aPointE = [aPointA[0] + nSecondLine, aPointA[1] + nSecondHeight];
+
+            const nThirdSquare = nLine * nFirstHeight * (aRatio[2] / aRatio[0]);
+            const nDownRad = (180 - oDownAngleIpt.value) * Math.PI / 180;
+            const nThirdLine = Math.sqrt(Math.pow(nSecondLine, 2) - nThirdSquare / Math.tan(nDownRad));
+            const nThirdHeight = Math.tan(nDownRad) * (nSecondLine - nThirdLine);
+
+            const aPointF = [aPointD[0] + (nSecondLine - nThirdLine), aPointD[1] + nThirdHeight];
+            const aPointG = [aPointF[0] + 2 * nThirdLine, aPointD[1] + nThirdHeight];
+
+
+            const oCtx = oCanvas.getContext('2d');
+            oCtx.clearRect(0, 0, 4000, 4000);
+
+            oCtx.beginPath();
+            oCtx.moveTo(aPointA[0], aPointA[1]);
+            oCtx.lineTo(aPointD[0], aPointD[1]);
+            oCtx.lineTo(aPointE[0], aPointE[1]);
+            oCtx.lineTo(aPointA[0], aPointA[1]);
+            oCtx.moveTo(aPointB[0], aPointB[1]);
+            oCtx.lineTo(aPointC[0], aPointC[1]);
+            oCtx.moveTo(aPointD[0], aPointD[1]);
+            oCtx.lineTo(aPointF[0], aPointF[1]);
+            oCtx.lineTo(aPointG[0], aPointG[1]);
+            oCtx.lineTo(aPointE[0], aPointE[1]);
+
+            oCtx.stroke();
+        }
+
+        function _fGetSecondHeight() {
+            const aRatio = _fGetRatio();
+            const nSecondHeight = Math.sqrt((aRatio[0] + aRatio[1]) / aRatio[0]) * nFirstHeight;
+            return nSecondHeight;
+        }
+
+        function _fGetRatio() {
+            const oRatioIpt = document.querySelector('#ratio');
+            const sRatio = oRatioIpt.value;
+            let aRatio = sRatio.split(/[:：]/);
+            aRatio = aRatio.map(sItem => {
+                return +sItem.trim() || 0;
+            });
+            return aRatio;
+        }
+    </script>
+</body>
+</html>
